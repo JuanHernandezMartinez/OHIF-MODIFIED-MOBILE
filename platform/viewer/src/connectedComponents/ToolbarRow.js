@@ -185,6 +185,7 @@ class ToolbarRow extends Component {
   closeCineDialogIfNotApplicable = () => {
     const { dialog } = this.props;
     let { dialogId, activeButtons, toolbarButtons } = this.state;
+
     if (dialogId) {
       const cineButtonPresent = toolbarButtons.find(
         button => button.options && button.options.behavior === 'CINE'
@@ -209,33 +210,13 @@ class ToolbarRow extends Component {
     const onPress = (side, value) => {
       this.props.handleSidePanelChange(side, value);
     };
-    const onPressLeft = onPress.bind(this, 'left');
-    const onPressRight = onPress.bind(this, 'right');
-
+    // const onPressLeft = onPress.bind(this, 'left');
+    // const onPressRight = onPress.bind(this, 'right');
     return (
       <>
         <div className="ToolbarRow">
-          <div className="pull-left m-t-1 p-y-1" style={{ padding: '10px' }}>
-            <RoundedButtonGroup
-              options={this.buttonGroups.left}
-              value={this.props.selectedLeftSidePanel || ''}
-              onValueChanged={onPressLeft}
-            />
-          </div>
           {buttonComponents}
           <ConnectedLayoutButton />
-          <div
-            className="pull-right m-t-1 rm-x-1"
-            style={{ marginLeft: 'auto' }}
-          >
-            {this.buttonGroups.right.length && (
-              <RoundedButtonGroup
-                options={this.buttonGroups.right}
-                value={this.props.selectedRightSidePanel || ''}
-                onValueChanged={onPressRight}
-              />
-            )}
-          </div>
         </div>
       </>
     );
@@ -361,7 +342,7 @@ function _handleToolbarButtonClick(button, evt, props) {
 function _getVisibleToolbarButtons() {
   const toolbarModules = extensionManager.modules[MODULE_TYPES.TOOLBAR];
   const toolbarButtonDefinitions = [];
-
+  console.log(toolbarModules);
   toolbarModules.forEach(extension => {
     const { definitions, defaultContext } = extension.module;
     definitions.forEach(definition => {
@@ -373,7 +354,15 @@ function _getVisibleToolbarButtons() {
     });
   });
 
-  return toolbarButtonDefinitions;
+  const buttons = [];
+  const labeles = ['Zoom', 'Levels', 'Pan', 'Reset'];
+  toolbarButtonDefinitions.forEach(tool => {
+    if (labeles.includes(tool.label)) {
+      buttons.push(tool);
+    }
+  });
+
+  return buttons;
 }
 
 function _handleBuiltIn(button) {

@@ -5,7 +5,6 @@ import OHIF, { MODULE_TYPES, DICOMSR } from '@ohif/core';
 import { withDialog } from '@ohif/ui';
 import moment from 'moment';
 
-import ConnectedHeader from './ConnectedHeader.js';
 import ToolbarRow from './ToolbarRow.js';
 import ConnectedStudyBrowser from './ConnectedStudyBrowser.js';
 import ConnectedViewerMain from './ConnectedViewerMain.js';
@@ -15,8 +14,6 @@ import { extensionManager, servicesManager } from './../App.js';
 import { ReconstructionIssues } from './../../../core/src/enums.js';
 
 // Contexts
-import WhiteLabelingContext from '../context/WhiteLabelingContext.js';
-import UserManagerContext from '../context/UserManagerContext';
 import AppContext from '../context/AppContext';
 
 import './Viewer.css';
@@ -301,112 +298,57 @@ class Viewer extends Component {
     return (
       <>
         {/* HEADER */}
-        <WhiteLabelingContext.Consumer>
-          {whiteLabeling => (
-            <UserManagerContext.Consumer>
-              {userManager => (
-                <AppContext.Consumer>
-                  {appContext => (
-                    <ConnectedHeader
-                      linkText={
-                        appContext.appConfig.showStudyList
-                          ? 'Study List'
-                          : undefined
-                      }
-                      linkPath={
-                        appContext.appConfig.showStudyList ? '/' : undefined
-                      }
-                      userManager={userManager}
-                    >
-                      {whiteLabeling &&
-                        whiteLabeling.createLogoComponentFn &&
-                        whiteLabeling.createLogoComponentFn(React)}
-                    </ConnectedHeader>
-                  )}
-                </AppContext.Consumer>
-              )}
-            </UserManagerContext.Consumer>
-          )}
-        </WhiteLabelingContext.Consumer>
+
         {/* TOOLBAR */}
         <ErrorBoundaryDialog context="ToolbarRow">
-          <ToolbarRow
-            activeViewport={
-              this.props.viewports[this.props.activeViewportIndex]
-            }
-            isLeftSidePanelOpen={this.state.isLeftSidePanelOpen}
-            isRightSidePanelOpen={this.state.isRightSidePanelOpen}
-            selectedLeftSidePanel={
-              this.state.isLeftSidePanelOpen
-                ? this.state.selectedLeftSidePanel
-                : ''
-            }
-            selectedRightSidePanel={
-              this.state.isRightSidePanelOpen
-                ? this.state.selectedRightSidePanel
-                : ''
-            }
-            handleSidePanelChange={(side, selectedPanel) => {
-              const sideClicked = side && side[0].toUpperCase() + side.slice(1);
-              const openKey = `is${sideClicked}SidePanelOpen`;
-              const selectedKey = `selected${sideClicked}SidePanel`;
-              const updatedState = Object.assign({}, this.state);
-
-              const isOpen = updatedState[openKey];
-              const prevSelectedPanel = updatedState[selectedKey];
-              // RoundedButtonGroup returns `null` if selected button is clicked
-              const isSameSelectedPanel =
-                prevSelectedPanel === selectedPanel || selectedPanel === null;
-
-              updatedState[selectedKey] = selectedPanel || prevSelectedPanel;
-
-              const isClosedOrShouldClose = !isOpen || isSameSelectedPanel;
-              if (isClosedOrShouldClose) {
-                updatedState[openKey] = !updatedState[openKey];
+          <div>
+            <ToolbarRow
+              activeViewport={
+                this.props.viewports[this.props.activeViewportIndex]
               }
+              isLeftSidePanelOpen={this.state.isLeftSidePanelOpen}
+              isRightSidePanelOpen={this.state.isRightSidePanelOpen}
+              selectedLeftSidePanel={
+                this.state.isLeftSidePanelOpen
+                  ? this.state.selectedLeftSidePanel
+                  : ''
+              }
+              selectedRightSidePanel={
+                this.state.isRightSidePanelOpen
+                  ? this.state.selectedRightSidePanel
+                  : ''
+              }
+              handleSidePanelChange={(side, selectedPanel) => {
+                const sideClicked =
+                  side && side[0].toUpperCase() + side.slice(1);
+                const openKey = `is${sideClicked}SidePanelOpen`;
+                const selectedKey = `selected${sideClicked}SidePanel`;
+                const updatedState = Object.assign({}, this.state);
 
-              this.setState(updatedState);
-            }}
-            studies={this.props.studies}
-          />
+                const isOpen = updatedState[openKey];
+                const prevSelectedPanel = updatedState[selectedKey];
+                // RoundedButtonGroup returns `null` if selected button is clicked
+                const isSameSelectedPanel =
+                  prevSelectedPanel === selectedPanel || selectedPanel === null;
+
+                updatedState[selectedKey] = selectedPanel || prevSelectedPanel;
+
+                const isClosedOrShouldClose = !isOpen || isSameSelectedPanel;
+                if (isClosedOrShouldClose) {
+                  updatedState[openKey] = !updatedState[openKey];
+                }
+
+                this.setState(updatedState);
+              }}
+              studies={this.props.studies}
+            />
+          </div>
         </ErrorBoundaryDialog>
-        <AppContext.Consumer>
+        {/* <AppContext.Consumer>
           {appContext => <StudyLoadingMonitor studies={this.props.studies} />}
-        </AppContext.Consumer>
+        </AppContext.Consumer> */}
         {/* VIEWPORTS + SIDEPANELS */}
         <div className="FlexboxLayout">
-          {/* LEFT */}
-          <ErrorBoundaryDialog context="LeftSidePanel">
-            <SidePanel from="left" isOpen={this.state.isLeftSidePanelOpen}>
-              {VisiblePanelLeft ? (
-                <VisiblePanelLeft
-                  viewports={this.props.viewports}
-                  studies={this.props.studies}
-                  activeIndex={this.props.activeViewportIndex}
-                />
-              ) : (
-                <AppContext.Consumer>
-                  {appContext => {
-                    const { appConfig } = appContext;
-                    const { studyPrefetcher } = appConfig;
-                    const { thumbnails } = this.state;
-                    return (
-                      <ConnectedStudyBrowser
-                        studies={thumbnails}
-                        studyMetadata={this.props.studies}
-                        showThumbnailProgressBar={
-                          studyPrefetcher &&
-                          studyPrefetcher.enabled &&
-                          studyPrefetcher.displayProgress
-                        }
-                      />
-                    );
-                  }}
-                </AppContext.Consumer>
-              )}
-            </SidePanel>
-          </ErrorBoundaryDialog>
-
           {/* MAIN */}
           <div className={classNames('main-content')}>
             <ErrorBoundaryDialog context="ViewerMain">
@@ -433,20 +375,38 @@ class Viewer extends Component {
             </ErrorBoundaryDialog>
           </div>
 
-          {/* RIGHT */}
-          <ErrorBoundaryDialog context="RightSidePanel">
-            <SidePanel from="right" isOpen={this.state.isRightSidePanelOpen}>
-              {VisiblePanelRight && (
-                <VisiblePanelRight
-                  isOpen={this.state.isRightSidePanelOpen}
+          {/* LEFT */}
+          <ErrorBoundaryDialog context="LeftSidePanel">
+            <SidePanel
+              className="left-panel"
+              from="left"
+              isOpen={this.state.isLeftSidePanelOpen}
+            >
+              {VisiblePanelLeft ? (
+                <VisiblePanelLeft
                   viewports={this.props.viewports}
                   studies={this.props.studies}
                   activeIndex={this.props.activeViewportIndex}
-                  activeViewport={
-                    this.props.viewports[this.props.activeViewportIndex]
-                  }
-                  getActiveViewport={this._getActiveViewport}
                 />
+              ) : (
+                <AppContext.Consumer>
+                  {appContext => {
+                    const { appConfig } = appContext;
+                    const { studyPrefetcher } = appConfig;
+                    const { thumbnails } = this.state;
+                    return (
+                      <ConnectedStudyBrowser
+                        studies={thumbnails}
+                        studyMetadata={this.props.studies}
+                        showThumbnailProgressBar={
+                          studyPrefetcher &&
+                          studyPrefetcher.enabled &&
+                          studyPrefetcher.displayProgress
+                        }
+                      />
+                    );
+                  }}
+                </AppContext.Consumer>
               )}
             </SidePanel>
           </ErrorBoundaryDialog>

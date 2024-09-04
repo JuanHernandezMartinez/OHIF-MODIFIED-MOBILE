@@ -50,9 +50,7 @@ export class ScrollableArea extends Component {
 
     return (
       <div
-        className={`scrollArea ${this.props.class} ${
-          this.state.scrollAreaClasses
-        }`}
+        className={`scrollArea ${this.props.class} ${this.state.scrollAreaClasses}`}
       >
         <div
           className={scrollableClass}
